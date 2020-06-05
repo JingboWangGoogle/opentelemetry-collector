@@ -1,0 +1,25 @@
+receivers:
+    examplereceiver:
+
+processors:
+    rename:
+        metrics:
+            include:
+                match_type: strict
+                metric_names: 
+                  - host/cpu/usage
+            action: update
+            names: cpu/usage_time
+exporters:
+    exampleexporter:
+
+service:
+    pipelines:
+        traces:
+            receivers: [examplereceiver]
+            processors: [rename]
+            exporters: [exampleexporter]
+        metrics:
+            receivers: [examplereceiver]
+            processors: [rename]
+            exporters: [exampleexporter]
