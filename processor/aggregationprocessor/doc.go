@@ -13,4 +13,4 @@
 // limitations under the License.
 
 // Package renameprocessor implements a processor for renaming metrics
-package renameprocessor
+package aggregationprocessor

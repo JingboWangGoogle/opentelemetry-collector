@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package renameprocessor
+package aggregationprocessor
 
 import (
 	"context"
@@ -25,7 +25,7 @@ import (
 
 const (
 	// The value of "type" key in configuration.
-	typeStr = "rename"
+	typeStr = "aggregation"
 )
 
 // Factory is the factory for rename processor.
@@ -65,5 +65,5 @@ func (f *Factory) CreateMetricsProcessor(
 	c configmodels.Processor,
 ) (component.MetricsProcessor, error) {
 	oCfg := c.(*Config)
-	return newRenameMetricProcessor(nextConsumer, oCfg)
+	return newAggregationMetricProcessor(nextConsumer, oCfg)
 }

@@ -2,7 +2,7 @@ receivers:
     examplereceiver:
 
 processors:
-    rename:
+    aggregation:
         metrics:
             include:
                 match_type: strict
@@ -17,9 +17,9 @@ service:
     pipelines:
         traces:
             receivers: [examplereceiver]
-            processors: [rename]
+            processors: [aggregation]
             exporters: [exampleexporter]
         metrics:
             receivers: [examplereceiver]
-            processors: [rename]
+            processors: [aggregation]
             exporters: [exampleexporter]

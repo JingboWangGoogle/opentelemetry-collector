@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package renameprocessor
+package aggregationprocessor
 
 import (
 	"go.opentelemetry.io/collector/config/configmodels"
@@ -27,13 +27,11 @@ type Config struct {
 
 // MetricRename renames the designated names to other names in the corresponding MetricDescriptor
 type MetricRename struct {
-	// Include match properties describe metrics that will be renamed. Others will remain unchanged
-	// TODO: The necessity of this field remains questionable
+	// Include match properties describe metrics that will be operated on. Others will remain unchanged
+	// Use 'Include' for the consistency with other processors
 	Include *filtermetric.MatchProperties `mapstructure:"include"`
 
 	// an action value of "update" indicates a rename action
-	// TODO: The necessity of this field remains questionable, and with this field,
-	// 		this processor can do more than just renaming
 	Action string `mapstructure:"action"`
 
 	// a list of strings for the metrics to be renamed to, which length should match the
