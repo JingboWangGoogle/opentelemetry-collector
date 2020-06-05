@@ -5,14 +5,14 @@
     processors:
         batch:
         queued_retry:
-        rename:
+        aggregation:
             metrics:
                 include:
                     match_type: strict
-                    metric_names: 
-                    - opdemo/process_counts
+                    metric_names: [opdemo/process_counts, opdemo/latency]
                 action: update
-                names: renamed
+                
+                names: [renamed/process_counts, renamed/latency]
 
     exporters:
         logging:
@@ -30,5 +30,5 @@
                 exporters: [logging]
             metrics:
                 receivers: [opencensus]
-                processors: [rename]
+                processors: [aggregation]
                 exporters: [file]
