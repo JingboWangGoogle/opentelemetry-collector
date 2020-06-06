@@ -74,9 +74,8 @@ func (amp *aggregationMetricProcessor) aggregateMetricsOps(md pdata.Metrics) pda
 	fmt.Println(amp.action)
 	if amp.action == update {
 		return amp.renameMetrics(md)
-	} else {
-		return md
 	}
+	return md
 }
 
 // renameMetrics renames the metrics based off the current and new names specified in the config
