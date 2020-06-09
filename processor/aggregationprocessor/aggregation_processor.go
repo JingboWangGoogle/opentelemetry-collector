@@ -16,7 +16,6 @@ package aggregationprocessor
 
 import (
 	"context"
-	"fmt"
 
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/consumer"
@@ -70,8 +69,6 @@ func (amp *aggregationMetricProcessor) ConsumeMetrics(ctx context.Context, md pd
 // aggregateMetricsOps determines what specific action to take
 // currently only handles rename (update), other operations will result in original copy returned
 func (amp *aggregationMetricProcessor) aggregateMetricsOps(md pdata.Metrics) pdata.Metrics {
-	fmt.Println(amp.action == update)
-	fmt.Println(amp.action)
 	if amp.action == update {
 		return amp.renameMetrics(md)
 	}
@@ -80,6 +77,7 @@ func (amp *aggregationMetricProcessor) aggregateMetricsOps(md pdata.Metrics) pda
 
 // renameMetrics renames the metrics based off the current and new names specified in the config
 func (amp *aggregationMetricProcessor) renameMetrics(md pdata.Metrics) pdata.Metrics {
+	// JWTODO: something should happen if the two lists have different lengths
 	mapping := amp.createRenameMapping()
 	if len(mapping) == 0 {
 		return md

@@ -12,5 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package renameprocessor implements a processor for renaming metrics
+// Package aggregationprocessor implements a processor for renaming metrics
 package aggregationprocessor

@@ -6,10 +6,9 @@ processors:
         metrics:
             include:
                 match_type: strict
-                metric_names: 
-                  - host/cpu/usage
+                metric_names: [host/cpu/usage, from]
             action: update
-            names: cpu/usage_time
+            names: [cpu/usage_time, to]
 exporters:
     exampleexporter:
 
