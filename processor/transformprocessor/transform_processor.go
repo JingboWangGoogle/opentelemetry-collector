@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package aggregationprocessor
+package transformprocessor
 
 import (
 	"context"
@@ -21,28 +21,32 @@ import (
 	"go.opentelemetry.io/collector/consumer"
 	"go.opentelemetry.io/collector/consumer/pdata"
 	"go.opentelemetry.io/collector/consumer/pdatautil"
-	"go.opentelemetry.io/collector/internal/processor/filtermetric"
 )
 
-const update = "update"
+const (
+	update      = "update"
+	updateLabel = "update_label"
+)
 
 type aggregationMetricProcessor struct {
-	cfg     *Config
-	next    consumer.MetricsConsumer
-	include *filtermetric.MatchProperties
-	action  string
-	names   []string
+	cfg        *Config
+	next       consumer.MetricsConsumer
+	metricname string
+	action     string
+	newname    string
+	operations []Operation
 }
 
 var _ component.MetricsProcessor = (*aggregationMetricProcessor)(nil)
 
 func newAggregationMetricProcessor(next consumer.MetricsConsumer, cfg *Config) (*aggregationMetricProcessor, error) {
 	return &aggregationMetricProcessor{
-		cfg:     cfg,
-		next:    next,
-		include: cfg.Metrics.Include,
-		action:  cfg.Metrics.Action,
-		names:   cfg.Metrics.Names,
+		cfg:        cfg,
+		next:       next,
+		metricname: cfg.MetricName,
+		action:     cfg.Action,
+		newname:    cfg.NewName,
+		operations: cfg.Operations,
 	}, nil
 }
 
@@ -63,33 +67,42 @@ func (*aggregationMetricProcessor) Shutdown(ctx context.Context) error {
 
 // ConsumeMetrics implements the MetricsProcessor interface
 func (amp *aggregationMetricProcessor) ConsumeMetrics(ctx context.Context, md pdata.Metrics) error {
-	return amp.next.ConsumeMetrics(ctx, amp.aggregateMetricsOps(md))
+	return amp.next.ConsumeMetrics(ctx, amp.transform(md))
 }
 
-// aggregateMetricsOps determines what specific action to take
-// currently only handles rename (update), other operations will result in original copy returned
-func (amp *aggregationMetricProcessor) aggregateMetricsOps(md pdata.Metrics) pdata.Metrics {
-	if amp.action == update {
-		return amp.renameMetrics(md)
-	}
-	return md
-}
-
-// renameMetrics renames the metrics based off the current and new names specified in the config
-func (amp *aggregationMetricProcessor) renameMetrics(md pdata.Metrics) pdata.Metrics {
-	// JWTODO: something should happen if the two lists have different lengths
-	mapping := amp.createRenameMapping()
-	if len(mapping) == 0 {
-		return md
-	}
-
+// transform renames the metrics based off the current and new names specified in the config
+func (amp *aggregationMetricProcessor) transform(md pdata.Metrics) pdata.Metrics {
 	mds := pdatautil.MetricsToMetricsData(md)
 	for i, data := range mds {
 		if len(data.Metrics) > 0 {
 			for j, metric := range data.Metrics {
-				newName, ok := mapping[metric.MetricDescriptor.Name]
-				if ok {
-					mds[i].Metrics[j].MetricDescriptor.Name = newName
+				if amp.metricname == metric.MetricDescriptor.Name && amp.action == update {
+					if amp.newname != "" {
+						mds[i].Metrics[j].MetricDescriptor.Name = amp.newname
+					}
+					for _, operation := range amp.operations {
+						action := operation.Action
+						if action == updateLabel {
+							label := operation.Label
+							if operation.NewLabel != "" {
+								for k, labelKey := range metric.MetricDescriptor.LabelKeys {
+									if labelKey.Key == label {
+										mds[i].Metrics[j].MetricDescriptor.LabelKeys[k].Key = operation.NewLabel
+									}
+								}
+							}
+
+							mapping := createMapping(operation.ValueActions)
+							for k, timeseries := range metric.Timeseries {
+								for z, labelValue := range timeseries.LabelValues {
+									newValue, ok := mapping[labelValue.Value]
+									if ok {
+										mds[i].Metrics[j].Timeseries[k].LabelValues[z].Value = newValue
+									}
+								}
+							}
+						}
+					}
 				}
 			}
 		}
@@ -97,13 +110,10 @@ func (amp *aggregationMetricProcessor) renameMetrics(md pdata.Metrics) pdata.Met
 	return pdatautil.MetricsFromMetricsData(mds)
 }
 
-// create a current name to new name mapping based on the config
-func (amp *aggregationMetricProcessor) createRenameMapping() map[string]string {
-	from := amp.include.MetricNames
-	to := amp.names
+func createMapping(valueActions []ValueAction) map[string]string {
 	mapping := make(map[string]string)
-	for i := range from {
-		mapping[from[i]] = to[i]
+	for _, valueAction := range valueActions {
+		mapping[valueAction.Value] = valueAction.NewValue
 	}
 	return mapping
 }

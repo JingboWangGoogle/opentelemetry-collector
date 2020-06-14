@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package aggregationprocessor
+package transformprocessor
 
 import (
 	"context"
@@ -26,81 +26,34 @@ import (
 	"go.opentelemetry.io/collector/consumer/consumerdata"
 	"go.opentelemetry.io/collector/consumer/pdatautil"
 	etest "go.opentelemetry.io/collector/exporter/exportertest"
-	"go.opentelemetry.io/collector/internal/processor/filtermetric"
-	"go.opentelemetry.io/collector/internal/processor/filterset"
 )
 
 type metricNameTest struct {
-	name   string
-	inc    *filtermetric.MatchProperties
-	action string
-	names  []string // new names
-	inMN   []string // input Metric names
-	outMN  []string // output Metric names
+	name       string
+	action     string
+	newName    string
+	operations []Operation
+	inMN       []string // input Metric names
+	outMN      []string // output Metric names
 }
 
 var (
-	fromNames = []string{
-		"metric1",
-		"metric2",
-		"metric3", // not in inMetricNames
-		"metric4",
-	}
-
-	toNames = []string{
-		"metric1/new",
-		"metric2/new",
-		"metric3/new", // not in inMetricNames
-		"metric4/new",
-	}
-
 	inMetricNames = []string{
 		"metric1",
-		"metric2",
-		"metric4",
-		"metric4", // repeat
 		"metric5",
-		"metric6",
-		"metric7",
-		"metric8",
-		"metric9",
-		"metric10",
-		"metric11",
-		"metric12",
-		"metric13",
 	}
-
 	outMetricNames = []string{
 		"metric1/new",
-		"metric2/new",
-		"metric4/new",
-		"metric4/new",
 		"metric5",
-		"metric6",
-		"metric7",
-		"metric8",
-		"metric9",
-		"metric10",
-		"metric11",
-		"metric12",
-		"metric13",
-	}
-
-	strictMetricsRenameProperties = &filtermetric.MatchProperties{
-		Config: filterset.Config{
-			MatchType: filterset.Strict,
-		},
-		MetricNames: fromNames,
 	}
 
 	standardTests = []metricNameTest{
 		{
-			name:   "renameAggregation",
-			inc:    strictMetricsRenameProperties,
-			action: "update",
-			names:  toNames,
-			inMN:   inMetricNames,
-			outMN:  outMetricNames,
+			name:    "metric1",
+			action:  "update",
+			newName: "metric1/new",
+			inMN:    inMetricNames,
+			outMN:   outMetricNames,
 		},
 	}
 )
@@ -115,11 +68,9 @@ func TestFilterMetricProcessor(t *testing.T) {
 					TypeVal: typeStr,
 					NameVal: typeStr,
 				},
-				Metrics: MetricRename{
-					Include: test.inc,
-					Action:  test.action,
-					Names:   test.names,
-				},
+				MetricName: test.name,
+				Action:     test.action,
+				NewName:    test.newName,
 			}
 			amp, err := newAggregationMetricProcessor(next, cfg)
 			assert.NotNil(t, amp)
@@ -174,11 +125,10 @@ func TestFilterMetricProcessor(t *testing.T) {
 func BenchmarkRenameMetricNames(b *testing.B) {
 	// runs 1000 metrics through a filterprocessor with both include and exclude filters.
 	stressTest := metricNameTest{
-		name:   "rename1000Metrics",
-		inc:    strictMetricsRenameProperties,
-		action: "update",
-		names:  toNames,
-		outMN:  outMetricNames,
+		name:    "rename1000Metrics",
+		action:  "update",
+		newName: "newname",
+		outMN:   outMetricNames,
 	}
 
 	for len(stressTest.inMN) < 1000 {
@@ -195,11 +145,9 @@ func BenchmarkRenameMetricNames(b *testing.B) {
 				TypeVal: typeStr,
 				NameVal: typeStr,
 			},
-			Metrics: MetricRename{
-				Include: test.inc,
-				Action:  test.action,
-				Names:   test.names,
-			},
+			MetricName: test.name,
+			Action:     test.action,
+			NewName:    test.newName,
 		}
 
 		amp, err := newAggregationMetricProcessor(next, cfg)

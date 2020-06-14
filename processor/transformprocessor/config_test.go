@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package aggregationprocessor
+package transformprocessor
 
 import (
 	"path"
@@ -22,28 +22,17 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/config"
 	"go.opentelemetry.io/collector/config/configmodels"
-	"go.opentelemetry.io/collector/internal/processor/filtermetric"
-	"go.opentelemetry.io/collector/internal/processor/filterset"
 )
 
 // TestLoadingConfigStrict tests loading testdata/config.yaml
 func TestLoadingConfigStrict(t *testing.T) {
-	// list of filters used repeatedly on testdata/config_strict.yaml
-	testDataFrom := []string{
-		"host/cpu/usage",
-		"from",
-	}
 
-	testDataTo := []string{
-		"cpu/usage_time",
-		"to",
-	}
-
-	testDataMetricProperties := &filtermetric.MatchProperties{
-		Config: filterset.Config{
-			MatchType: filterset.Strict,
+	testDataOperations := []Operation{
+		{
+			Action:   "update_label",
+			Label:    "label",
+			NewLabel: "new_label",
 		},
-		MetricNames: testDataFrom,
 	}
 
 	factories, err := config.ExampleComponents()
@@ -61,17 +50,16 @@ func TestLoadingConfigStrict(t *testing.T) {
 		expCfg     *Config
 	}{
 		{
-			filterName: "aggregation",
+			filterName: "transform",
 			expCfg: &Config{
 				ProcessorSettings: configmodels.ProcessorSettings{
-					NameVal: "aggregation",
+					NameVal: "transform",
 					TypeVal: typeStr,
 				},
-				Metrics: MetricRename{
-					Include: testDataMetricProperties,
-					Action:  "update",
-					Names:   testDataTo,
-				},
+				MetricName: "old_name",
+				Action:     "update",
+				NewName:    "new_name",
+				Operations: testDataOperations,
 			},
 		},
 	}

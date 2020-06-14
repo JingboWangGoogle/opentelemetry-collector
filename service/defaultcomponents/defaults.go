@@ -29,7 +29,6 @@ import (
 	"go.opentelemetry.io/collector/extension/healthcheckextension"
 	"go.opentelemetry.io/collector/extension/pprofextension"
 	"go.opentelemetry.io/collector/extension/zpagesextension"
-	"go.opentelemetry.io/collector/processor/aggregationprocessor"
 	"go.opentelemetry.io/collector/processor/attributesprocessor"
 	"go.opentelemetry.io/collector/processor/batchprocessor"
 	"go.opentelemetry.io/collector/processor/memorylimiter"
@@ -38,6 +37,7 @@ import (
 	"go.opentelemetry.io/collector/processor/samplingprocessor/probabilisticsamplerprocessor"
 	"go.opentelemetry.io/collector/processor/samplingprocessor/tailsamplingprocessor"
 	"go.opentelemetry.io/collector/processor/spanprocessor"
+	"go.opentelemetry.io/collector/processor/transformprocessor"
 	"go.opentelemetry.io/collector/receiver/hostmetricsreceiver"
 	"go.opentelemetry.io/collector/receiver/jaegerreceiver"
 	"go.opentelemetry.io/collector/receiver/opencensusreceiver"
@@ -99,7 +99,7 @@ func Components() (
 		&tailsamplingprocessor.Factory{},
 		&probabilisticsamplerprocessor.Factory{},
 		&spanprocessor.Factory{},
-		&aggregationprocessor.Factory{},
+		&transformprocessor.Factory{},
 	)
 	if err != nil {
 		errs = append(errs, err)

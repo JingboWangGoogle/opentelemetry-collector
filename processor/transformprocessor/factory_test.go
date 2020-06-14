@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package aggregationprocessor
+package transformprocessor
 
 import (
 	"context"
@@ -32,7 +32,7 @@ func TestType(t *testing.T) {
 	factory := Factory{}
 	pType := factory.Type()
 
-	assert.Equal(t, pType, configmodels.Type("aggregation"))
+	assert.Equal(t, pType, configmodels.Type("transform"))
 }
 
 func TestCreateDefaultConfig(t *testing.T) {

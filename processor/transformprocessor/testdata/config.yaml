@@ -2,13 +2,15 @@ receivers:
     examplereceiver:
 
 processors:
-    aggregation:
-        metrics:
-            include:
-                match_type: strict
-                metric_names: [host/cpu/usage, from]
-            action: update
-            names: [cpu/usage_time, to]
+    transform:
+        metric_name: old_name
+        action: update
+        new_name: new_name
+        operations:
+            - action: update_label
+              label: label
+              new_label: new_label
+
 exporters:
     exampleexporter:
 
@@ -16,9 +18,9 @@ service:
     pipelines:
         traces:
             receivers: [examplereceiver]
-            processors: [aggregation]
+            processors: [transform]
             exporters: [exampleexporter]
         metrics:
             receivers: [examplereceiver]
-            processors: [aggregation]
+            processors: [transform]
             exporters: [exampleexporter]
